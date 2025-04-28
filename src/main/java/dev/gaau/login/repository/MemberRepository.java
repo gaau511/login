@@ -1,0 +1,7 @@
+package dev.gaau.login.repository;
+
+import dev.gaau.login.domain.Member;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface MemberRepository extends JpaRepository<Member, Long> {
+}
