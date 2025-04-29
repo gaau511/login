@@ -60,4 +60,19 @@ public class JwtUtil {
         return refreshToken;
     }
 
+    public Boolean validateToken(String token) {
+        Claims claims = Jwts.parser().verifyWith(secretKey).build()
+                .parseSignedClaims(token).getPayload();
+
+        if (!validateExpirationTime(claims.getExpiration()))
+            return false;
+
+        return true;
+    }
+
+    public Boolean validateExpirationTime(Date exp) {
+        Date now = Date.from(Instant.now());
+        return exp.before(now);
+    }
+
 }
