@@ -37,7 +37,7 @@ public class JwtUtil {
                 .issuer(issuer)
                 .audience().add(audience).and()
                 .issuedAt(Date.from(Instant.now()))
-                .expiration(Date.from(Instant.now().plusMillis(accessTokenExpTime)))
+                .expiration(Date.from(Instant.now().plusSeconds(accessTokenExpTime)))
 
                 .signWith(secretKey)
                 .compact();
@@ -52,7 +52,7 @@ public class JwtUtil {
                 .issuer(issuer)
                 .audience().add(audience).and()
                 .issuedAt(Date.from(Instant.now()))
-                .expiration(Date.from(Instant.now().plusMillis(refreshTokenExpTime)))
+                .expiration(Date.from(Instant.now().plusSeconds(refreshTokenExpTime)))
 
                 .signWith(secretKey)
                 .compact();
