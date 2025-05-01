@@ -2,7 +2,7 @@ package dev.gaau.login.controller.api;
 
 import dev.gaau.login.dto.request.LoginRequestDto;
 import dev.gaau.login.dto.request.SignUpRequestDto;
-import dev.gaau.login.dto.response.LoginResponseDto;
+import dev.gaau.login.dto.response.TokenResponseDto;
 import dev.gaau.login.dto.response.MemberResponseDto;
 import dev.gaau.login.serivce.MemberService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,9 +28,9 @@ public class MemberApiController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto request,
+    public ResponseEntity<TokenResponseDto> login(@RequestBody LoginRequestDto request,
                                                   HttpServletRequest httpRequest) {
-        LoginResponseDto loginDto = memberService.login(request, httpRequest);
+        TokenResponseDto loginDto = memberService.login(request, httpRequest);
 
         return ResponseEntity.ok(loginDto);
     }
