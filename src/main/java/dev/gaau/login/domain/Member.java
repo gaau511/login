@@ -41,6 +41,10 @@ public class Member {
     @Column(name = "birth", nullable = false)
     private Date birth;
 
+    @Lob
+    @Column(name = "refresh_token", columnDefinition = "TEXT")
+    private String refreshToken;
+
     @CreationTimestamp
     @Column(name = "createdAt", nullable = false)
     private LocalDateTime createdAt;
