@@ -3,15 +3,13 @@ package dev.gaau.login.serivce;
 import dev.gaau.login.domain.Member;
 import dev.gaau.login.dto.request.LoginRequestDto;
 import dev.gaau.login.dto.request.SignUpRequestDto;
-import dev.gaau.login.dto.response.LoginResponseDto;
 import dev.gaau.login.dto.response.MemberResponseDto;
+import dev.gaau.login.dto.response.TokenResponseDto;
 import dev.gaau.login.jwt.JwtUtil;
 import dev.gaau.login.mapper.MemberMapper;
 import dev.gaau.login.repository.MemberRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +22,7 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final MemberMapper memberMapper;
     private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
 
     public MemberResponseDto join(SignUpRequestDto request) {
 
@@ -36,4 +35,24 @@ public class MemberService {
         return memberMapper.memberToMemberResponseDto(savedMember);
     }
 
+    public TokenResponseDto login(LoginRequestDto request, HttpServletRequest httpRequest) {
+
+        String username = request.getUsername();
+        String password = request.getPassword();
+
+        Member member = memberRepository.findByUsername(username).orElseThrow(
+                () -> new RuntimeException("Member not found with username: " + username)
+        );
+
+        if (!passwordEncoder.matches(password, member.getPassword())) {
+            throw new RuntimeException("Wrong password for " + username);
+        }
+
+        String accessToken = jwtUtil.createAccessToken(member.getId(), httpRequest.getRequestURI());
+        String refreshToken = jwtUtil.createRefreshToken(member.getId(), httpRequest.getRequestURI());
+
+        member.setRefreshToken(refreshToken);
+
+        return new TokenResponseDto(accessToken, refreshToken);
+    }
 }
