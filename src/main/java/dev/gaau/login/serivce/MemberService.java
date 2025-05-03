@@ -10,14 +10,19 @@ import dev.gaau.login.mapper.MemberMapper;
 import dev.gaau.login.repository.MemberRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Transactional
 @RequiredArgsConstructor
 @Service
-public class MemberService {
+public class MemberService implements UserDetailsService {
 
     private final MemberRepository memberRepository;
     private final MemberMapper memberMapper;
@@ -54,5 +59,12 @@ public class MemberService {
         member.setRefreshToken(refreshToken);
 
         return new TokenResponseDto(accessToken, refreshToken);
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return memberRepository.findByUsername(username).orElseThrow(
+                () -> new RuntimeException("Member not found with username: " + username)
+        );
     }
 }
