@@ -61,6 +61,12 @@ public class MemberService implements UserDetailsService {
         return new TokenResponseDto(accessToken, refreshToken);
     }
 
+    public Optional<MemberResponseDto> findById(Long id) {
+        return memberRepository.findById(id)
+                .map(memberMapper::memberToMemberResponseDto);
+    }
+
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return memberRepository.findByUsername(username).orElseThrow(
