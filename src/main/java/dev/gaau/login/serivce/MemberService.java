@@ -3,11 +3,14 @@ package dev.gaau.login.serivce;
 import dev.gaau.login.domain.Member;
 import dev.gaau.login.dto.request.LoginRequestDto;
 import dev.gaau.login.dto.request.SignUpRequestDto;
+import dev.gaau.login.dto.request.VerifyRefreshTokenRequestDto;
 import dev.gaau.login.dto.response.MemberResponseDto;
 import dev.gaau.login.dto.response.TokenResponseDto;
 import dev.gaau.login.jwt.JwtUtil;
 import dev.gaau.login.mapper.MemberMapper;
 import dev.gaau.login.repository.MemberRepository;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -65,6 +68,31 @@ public class MemberService implements UserDetailsService {
         return memberRepository.findById(id)
                 .map(memberMapper::memberToMemberResponseDto);
     }
+
+    public TokenResponseDto verifyRefreshToken(VerifyRefreshTokenRequestDto request, HttpServletRequest httpRequest) {
+        String refreshToken = request.getRefreshToken();
+
+        if (!jwtUtil.isValidToken(refreshToken))
+            throw new RuntimeException("Invalid Token");
+
+        Claims claims = jwtUtil.resolveToken(refreshToken).get();
+        Long memberId = Long.valueOf(claims.getSubject());
+
+        Member member = memberRepository.findById(memberId).orElseThrow(
+                () -> new RuntimeException("Not found Member with Id : " + memberId)
+        );
+
+        if (!member.getRefreshToken().equals(refreshToken)) {
+            throw new RuntimeException("Refresh token is not identical for member with id : " + memberId);
+        }
+
+        String newAccessToken = jwtUtil.createAccessToken(member.getId(), httpRequest.getRequestURI());
+        String newRefreshToken = jwtUtil.createRefreshToken(member.getId(), httpRequest.getRequestURI());
+        member.setRefreshToken(newRefreshToken);
+
+        return new TokenResponseDto(newAccessToken,newRefreshToken);
+    }
+
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
