@@ -66,7 +66,6 @@ public class MemberService implements UserDetailsService {
                 .map(memberMapper::memberToMemberResponseDto);
     }
 
-
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return memberRepository.findByUsername(username).orElseThrow(
