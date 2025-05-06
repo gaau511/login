@@ -2,16 +2,21 @@ package dev.gaau.login.controller.api;
 
 import dev.gaau.login.dto.request.LoginRequestDto;
 import dev.gaau.login.dto.request.SignUpRequestDto;
+import dev.gaau.login.dto.request.VerifyRefreshTokenRequestDto;
 import dev.gaau.login.dto.response.TokenResponseDto;
 import dev.gaau.login.dto.response.MemberResponseDto;
 import dev.gaau.login.serivce.MemberService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -33,5 +38,23 @@ public class MemberApiController {
         TokenResponseDto loginDto = memberService.login(request, httpRequest);
 
         return ResponseEntity.ok(loginDto);
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<?> verifyRefreshToken(
+            @RequestBody VerifyRefreshTokenRequestDto request,
+            HttpServletRequest httpRequest
+    ) {
+
+        try {
+            TokenResponseDto tokenResponseDto = memberService.verifyRefreshToken(request, httpRequest);
+            return ResponseEntity.ok(tokenResponseDto);
+        } catch (RuntimeException e) {
+            Map<String, String> body = new HashMap<>();
+            body.put("code", "INVALID_REFRESH_TOKEN");
+            body.put("message", "Refresh token is invalid");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
+        }
+
     }
 }
