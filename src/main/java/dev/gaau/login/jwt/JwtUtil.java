@@ -1,6 +1,7 @@
 package dev.gaau.login.jwt;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.util.Date;
 import java.time.Instant;
+import java.util.Optional;
 
 @Component
 public class JwtUtil {
@@ -60,19 +62,21 @@ public class JwtUtil {
         return refreshToken;
     }
 
-    public Boolean validateToken(String token) {
-        Claims claims = Jwts.parser().verifyWith(secretKey).build()
-                .parseSignedClaims(token).getPayload();
+    public Optional<Claims> resolveToken(String token) {
+        try {
+            Claims claims = Jwts.parser().verifyWith(secretKey).build()
+                    .parseSignedClaims(token).getPayload();
+            return Optional.of(claims);
+        } catch (IllegalArgumentException | JwtException e) {
+            return Optional.empty();
+        }
+    }
 
-        if (!validateExpirationTime(claims.getExpiration()))
+    public Boolean isValidToken(String token) {
+        if (resolveToken(token).isEmpty())
             return false;
 
         return true;
-    }
-
-    public Boolean validateExpirationTime(Date exp) {
-        Date now = Date.from(Instant.now());
-        return exp.before(now);
     }
 
 }
