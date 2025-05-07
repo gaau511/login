@@ -24,9 +24,7 @@ public class SecurityConfig {
                 .csrf(CsrfConfigurer::disable)
                 .authorizeHttpRequests(authorizeRequests ->
                     authorizeRequests
-                            .requestMatchers("/", "/error").permitAll()
-                            .requestMatchers("/*/auth/signUp", "/*/auth/login", "/*/auth/refresh-token").permitAll()
-                            .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                            .requestMatchers(PublicEndpoints.ENDPOINTS.toArray(new String[0])).permitAll()
                             .anyRequest().authenticated()
 
                 )
