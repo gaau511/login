@@ -40,7 +40,7 @@ public class MemberApiController {
         return ResponseEntity.ok(loginDto);
     }
 
-    @PostMapping("/refresh-token")
+    @PostMapping("/refreshToken")
     public ResponseEntity<?> verifyRefreshToken(
             @RequestBody VerifyRefreshTokenRequestDto request,
             HttpServletRequest httpRequest
