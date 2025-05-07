@@ -3,6 +3,7 @@ package dev.gaau.login.dto.response;
 import lombok.*;
 
 import java.sql.Date;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
@@ -26,7 +27,7 @@ public class MemberResponseDto {
 
     private String nickname;
 
-    private Date birth;
+    private LocalDate birth;
 
     private LocalDateTime createdAt;
 }
