@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -27,12 +28,16 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String accessToken = request.getHeader("accessToken");
+        String authorizationHeader = request.getHeader("Authorization");
+        Optional<String> parsedHeader = jwtUtil.parseAuthorizationHeader(authorizationHeader);
 
-        if (accessToken == null) {
+
+        if (parsedHeader.isEmpty()) {
             filterChain.doFilter(request, response);
             return;
         }
+
+        String accessToken = parsedHeader.get();
 
         if (!jwtUtil.isValidToken(accessToken)) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
