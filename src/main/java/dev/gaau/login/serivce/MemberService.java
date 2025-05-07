@@ -11,7 +11,9 @@ import dev.gaau.login.mapper.MemberMapper;
 import dev.gaau.login.repository.MemberRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -43,7 +45,8 @@ public class MemberService implements UserDetailsService {
         return memberMapper.memberToMemberResponseDto(savedMember);
     }
 
-    public TokenResponseDto login(LoginRequestDto request, HttpServletRequest httpRequest) {
+    public TokenResponseDto login(LoginRequestDto request, HttpServletRequest httpRequest,
+                                  HttpServletResponse response) {
 
         String username = request.getUsername();
         String password = request.getPassword();
@@ -61,7 +64,18 @@ public class MemberService implements UserDetailsService {
 
         member.setRefreshToken(refreshToken);
 
-        return new TokenResponseDto(accessToken, refreshToken);
+        setTokenCookies(response, refreshToken);
+
+        return new TokenResponseDto(accessToken);
+    }
+
+    public void setTokenCookies(HttpServletResponse response, String refreshToken) {
+        Cookie refreshTokenCookie = new Cookie("refreshToken", refreshToken);
+        refreshTokenCookie.setHttpOnly(true);
+        refreshTokenCookie.setSecure(true);
+        refreshTokenCookie.setPath("/");
+
+        response.addCookie(refreshTokenCookie);
     }
 
     public Optional<MemberResponseDto> findById(Long id) {
@@ -69,7 +83,8 @@ public class MemberService implements UserDetailsService {
                 .map(memberMapper::memberToMemberResponseDto);
     }
 
-    public TokenResponseDto verifyRefreshToken(VerifyRefreshTokenRequestDto request, HttpServletRequest httpRequest) {
+    public TokenResponseDto verifyRefreshToken(VerifyRefreshTokenRequestDto request, HttpServletRequest httpRequest,
+                                               HttpServletResponse response) {
         String refreshToken = request.getRefreshToken();
 
         if (!jwtUtil.isValidToken(refreshToken))
@@ -90,7 +105,9 @@ public class MemberService implements UserDetailsService {
         String newRefreshToken = jwtUtil.createRefreshToken(member.getId(), httpRequest.getRequestURI());
         member.setRefreshToken(newRefreshToken);
 
-        return new TokenResponseDto(newAccessToken,newRefreshToken);
+        setTokenCookies(response, refreshToken);
+
+        return new TokenResponseDto(newAccessToken);
     }
 
 
