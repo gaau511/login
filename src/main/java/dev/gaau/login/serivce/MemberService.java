@@ -36,6 +36,17 @@ public class MemberService implements UserDetailsService {
 
     public MemberResponseDto join(SignUpRequestDto request) {
 
+        String username = request.getUsername();
+
+        if (memberRepository.existsByUsername(username)) {
+            throw new RuntimeException("An Already existing username");
+        }
+
+        if (!validatePassword(request.getPassword())) {
+            throw new RuntimeException("Password Should be longer than 8 letters" +
+                    "and include upper letters, lower letters and special symbols." );
+        }
+
         String encodedPassword = passwordEncoder.encode(request.getPassword());
         request.setPassword(encodedPassword);
 
@@ -43,6 +54,11 @@ public class MemberService implements UserDetailsService {
         Member savedMember = memberRepository.save(member);
 
         return memberMapper.memberToMemberResponseDto(savedMember);
+    }
+
+    private Boolean validatePassword(String password) {
+        String passwordRegex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^a-zA-Z0-9]).{8,}$";
+        return password.matches(passwordRegex);
     }
 
     public TokenResponseDto login(LoginRequestDto request, HttpServletRequest httpRequest,
