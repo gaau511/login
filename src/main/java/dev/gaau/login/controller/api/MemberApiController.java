@@ -2,7 +2,6 @@ package dev.gaau.login.controller.api;
 
 import dev.gaau.login.dto.request.LoginRequestDto;
 import dev.gaau.login.dto.request.SignUpRequestDto;
-import dev.gaau.login.dto.request.VerifyRefreshTokenRequestDto;
 import dev.gaau.login.dto.response.TokenResponseDto;
 import dev.gaau.login.dto.response.MemberResponseDto;
 import dev.gaau.login.serivce.MemberService;
@@ -44,13 +43,12 @@ public class MemberApiController {
 
     @PostMapping("/refreshToken")
     public ResponseEntity<?> verifyRefreshToken(
-            @RequestBody VerifyRefreshTokenRequestDto request,
             HttpServletRequest httpRequest,
             HttpServletResponse httpResponse
     ) {
 
         try {
-            TokenResponseDto tokenResponseDto = memberService.verifyRefreshToken(request, httpRequest, httpResponse);
+            TokenResponseDto tokenResponseDto = memberService.verifyRefreshToken(httpRequest, httpResponse);
             return ResponseEntity.ok(tokenResponseDto);
         } catch (RuntimeException e) {
             Map<String, String> body = new HashMap<>();
