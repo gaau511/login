@@ -1,6 +1,7 @@
 package dev.gaau.login.serivce;
 
 import dev.gaau.login.domain.Member;
+import dev.gaau.login.domain.RefreshTokenBlacklist;
 import dev.gaau.login.dto.request.LoginRequestDto;
 import dev.gaau.login.dto.request.SignUpRequestDto;
 import dev.gaau.login.dto.request.VerifyRefreshTokenRequestDto;
@@ -9,12 +10,14 @@ import dev.gaau.login.dto.response.TokenResponseDto;
 import dev.gaau.login.jwt.JwtUtil;
 import dev.gaau.login.mapper.MemberMapper;
 import dev.gaau.login.repository.MemberRepository;
+import dev.gaau.login.repository.RefreshTokenBlacklistRepository;
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -24,6 +27,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
+import static java.util.Optional.ofNullable;
+
 @Transactional
 @RequiredArgsConstructor
 @Service
@@ -32,6 +37,7 @@ public class MemberService implements UserDetailsService {
     private final MemberRepository memberRepository;
     private final MemberMapper memberMapper;
     private final PasswordEncoder passwordEncoder;
+    private final RefreshTokenBlacklistRepository refreshTokenBlackListRepository;
     private final JwtUtil jwtUtil;
 
     public MemberResponseDto join(SignUpRequestDto request) {
@@ -99,11 +105,19 @@ public class MemberService implements UserDetailsService {
                 .map(memberMapper::memberToMemberResponseDto);
     }
 
-    public TokenResponseDto verifyRefreshToken(VerifyRefreshTokenRequestDto request, HttpServletRequest httpRequest,
+    public TokenResponseDto verifyRefreshToken(HttpServletRequest httpRequest,
                                                HttpServletResponse response) {
-        String refreshToken = request.getRefreshToken();
 
-        if (!jwtUtil.isValidToken(refreshToken))
+        String refreshToken = null;
+        Cookie[] cookies = httpRequest.getCookies();
+        for (Cookie cookie : cookies) {
+            if (cookie.getName().equals("refreshToken")) {
+                refreshToken = cookie.getValue();
+            }
+        }
+
+        if (!jwtUtil.isValidToken(refreshToken)
+                || refreshTokenBlackListRepository.existsByToken(refreshToken))
             throw new RuntimeException("Invalid Token");
 
         Claims claims = jwtUtil.resolveToken(refreshToken).get();
@@ -121,7 +135,7 @@ public class MemberService implements UserDetailsService {
         String newRefreshToken = jwtUtil.createRefreshToken(member.getId(), httpRequest.getRequestURI());
         member.setRefreshToken(newRefreshToken);
 
-        setTokenCookies(response, refreshToken);
+        setTokenCookies(response, newRefreshToken);
 
         return new TokenResponseDto(newAccessToken);
     }
