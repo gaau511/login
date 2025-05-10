@@ -4,7 +4,6 @@ import dev.gaau.login.domain.Member;
 import dev.gaau.login.domain.RefreshTokenBlacklist;
 import dev.gaau.login.dto.request.LoginRequestDto;
 import dev.gaau.login.dto.request.SignUpRequestDto;
-import dev.gaau.login.dto.request.VerifyRefreshTokenRequestDto;
 import dev.gaau.login.dto.response.MemberResponseDto;
 import dev.gaau.login.dto.response.TokenResponseDto;
 import dev.gaau.login.jwt.JwtUtil;
@@ -146,5 +145,25 @@ public class MemberService implements UserDetailsService {
         return memberRepository.findByUsername(username).orElseThrow(
                 () -> new RuntimeException("Member not found with username: " + username)
         );
+    }
+
+    public Boolean logout() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication != null && authentication.isAuthenticated()) {
+            SecurityContextHolder.clearContext();
+
+            Member findMember = (Member) authentication.getPrincipal();
+            ofNullable(findMember).ifPresent(member -> {
+                String refreshToken = member.getRefreshToken();
+                ofNullable(refreshToken).ifPresent( token -> {
+                    RefreshTokenBlacklist newToken = new RefreshTokenBlacklist();
+                    newToken.setToken(token);
+                    refreshTokenBlackListRepository.save(newToken);
+                });
+            });
+        }
+
+        return false;
     }
 }
