@@ -41,6 +41,14 @@ public class MemberApiController {
         return ResponseEntity.ok(loginDto);
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout() {
+        if (memberService.logout())
+            return ResponseEntity.ok().build();
+        else
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+    }
+
     @PostMapping("/refreshToken")
     public ResponseEntity<?> verifyRefreshToken(
             HttpServletRequest httpRequest,
