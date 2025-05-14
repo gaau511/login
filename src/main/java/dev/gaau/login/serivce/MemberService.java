@@ -175,14 +175,7 @@ public class MemberService implements UserDetailsService {
             SecurityContextHolder.clearContext();
 
             Member findMember = (Member) authentication.getPrincipal();
-            ofNullable(findMember).ifPresent(member -> {
-                String refreshToken = member.getRefreshToken();
-                ofNullable(refreshToken).ifPresent( token -> {
-                    RefreshTokenBlacklist newToken = new RefreshTokenBlacklist();
-                    newToken.setToken(token);
-                    refreshTokenBlackListRepository.save(newToken);
-                });
-            });
+            ofNullable(findMember).ifPresent(refreshTokenRepository::deleteByMember);
         }
 
         return false;
