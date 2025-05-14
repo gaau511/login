@@ -129,9 +129,16 @@ public class MemberService implements UserDetailsService {
             }
         }
 
-        if (!jwtUtil.isValidToken(refreshToken)
-                || refreshTokenBlackListRepository.existsByToken(refreshToken))
+        if (!jwtUtil.isValidToken(refreshToken))
             throw new RuntimeException("Invalid Token");
+
+        RefreshToken findToken = refreshTokenRepository.findByToken(refreshToken).orElseThrow(
+                () -> new RuntimeException("Invalid Token")
+        );
+
+        if (findToken.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Expired RefreshToken");
+        }
 
         Claims claims = jwtUtil.resolveToken(refreshToken).get();
         Long memberId = Long.valueOf(claims.getSubject());
@@ -140,14 +147,14 @@ public class MemberService implements UserDetailsService {
                 () -> new RuntimeException("Not found Member with Id : " + memberId)
         );
 
-        if (!member.getRefreshToken().equals(refreshToken)) {
-            throw new RuntimeException("Refresh token is not identical for member with id : " + memberId);
-        }
-
         String newAccessToken = jwtUtil.createAccessToken(member.getId(), httpRequest.getRequestURI());
         String newRefreshToken = jwtUtil.createRefreshToken(member.getId(), httpRequest.getRequestURI());
-        member.setRefreshToken(newRefreshToken);
 
+        LocalDateTime expiresAt = jwtUtil.getExpiration(refreshToken).toInstant()
+                .atZone(ZoneId.systemDefault()).toLocalDateTime();
+
+        findToken.setToken(newRefreshToken);
+        findToken.setExpiresAt(expiresAt);
         setTokenCookies(response, newRefreshToken);
 
         return new TokenResponseDto(newAccessToken);
