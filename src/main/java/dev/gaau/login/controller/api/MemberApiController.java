@@ -42,11 +42,11 @@ public class MemberApiController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout() {
+    public ResponseEntity<Void> logout() {
         if (memberService.logout())
             return ResponseEntity.ok().build();
-        else
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
 
     @PostMapping("/refreshToken")
