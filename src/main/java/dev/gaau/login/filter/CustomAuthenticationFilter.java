@@ -1,5 +1,6 @@
 package dev.gaau.login.filter;
 
+import dev.gaau.login.config.PublicEndpoints;
 import dev.gaau.login.dto.response.MemberResponseDto;
 import dev.gaau.login.jwt.JwtUtil;
 import dev.gaau.login.serivce.MemberService;
@@ -25,6 +26,11 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final MemberService memberService;
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return PublicEndpoints.ENDPOINTS.stream().anyMatch(request.getRequestURI()::startsWith);
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
