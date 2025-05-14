@@ -1,12 +1,15 @@
 package dev.gaau.login.domain;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
@@ -44,11 +47,7 @@ public class Member implements UserDetails {
     private String nickname;
 
     @Column(name = "birth", nullable = false)
-    private Date birth;
-
-    @Lob
-    @Column(name = "refresh_token", columnDefinition = "TEXT")
-    private String refreshToken;
+    private LocalDate birth;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false)

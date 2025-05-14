@@ -1,7 +1,10 @@
 package dev.gaau.login.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Getter
@@ -23,6 +26,7 @@ public class SignUpRequestDto {
 
     private String nickname;
 
-    private Date birth;
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate birth;
 
 }
