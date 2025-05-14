@@ -62,6 +62,14 @@ public class JwtUtil {
         return refreshToken;
     }
 
+    public Date getExpiration(String token) {
+        if (isValidToken(token)) {
+            return resolveToken(token).get().getExpiration();
+        }
+
+        return null;
+    }
+
     public Optional<Claims> resolveToken(String token) {
         try {
             Claims claims = Jwts.parser().verifyWith(secretKey).build()
