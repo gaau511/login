@@ -49,10 +49,6 @@ public class Member implements UserDetails {
     @Column(name = "birth", nullable = false)
     private LocalDate birth;
 
-    @Lob
-    @Column(name = "refresh_token", columnDefinition = "TEXT")
-    private String refreshToken;
-
     @CreationTimestamp
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
