@@ -1,7 +1,7 @@
 package dev.gaau.login.serivce;
 
 import dev.gaau.login.domain.Member;
-import dev.gaau.login.domain.RefreshTokenBlacklist;
+import dev.gaau.login.domain.RefreshToken;
 import dev.gaau.login.dto.request.LoginRequestDto;
 import dev.gaau.login.dto.request.SignUpRequestDto;
 import dev.gaau.login.dto.response.MemberResponseDto;
@@ -9,7 +9,7 @@ import dev.gaau.login.dto.response.TokenResponseDto;
 import dev.gaau.login.jwt.JwtUtil;
 import dev.gaau.login.mapper.MemberMapper;
 import dev.gaau.login.repository.MemberRepository;
-import dev.gaau.login.repository.RefreshTokenBlacklistRepository;
+import dev.gaau.login.repository.RefreshTokenRepository;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,6 +24,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.List;
 import java.util.Optional;
 
 import static java.util.Optional.ofNullable;
@@ -36,7 +39,7 @@ public class MemberService implements UserDetailsService {
     private final MemberRepository memberRepository;
     private final MemberMapper memberMapper;
     private final PasswordEncoder passwordEncoder;
-    private final RefreshTokenBlacklistRepository refreshTokenBlackListRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final JwtUtil jwtUtil;
 
     public MemberResponseDto join(SignUpRequestDto request) {
@@ -83,7 +86,18 @@ public class MemberService implements UserDetailsService {
         String accessToken = jwtUtil.createAccessToken(member.getId(), httpRequest.getRequestURI());
         String refreshToken = jwtUtil.createRefreshToken(member.getId(), httpRequest.getRequestURI());
 
-        member.setRefreshToken(refreshToken);
+        LocalDateTime expiresAt = jwtUtil.getExpiration(refreshToken).toInstant()
+                .atZone(ZoneId.systemDefault()).toLocalDateTime();
+
+
+        Optional<RefreshToken> findToken = refreshTokenRepository.findByMember(member);
+        if (findToken.isPresent()) {
+            findToken.get().setToken(refreshToken);
+            findToken.get().setExpiresAt(expiresAt);
+        } else {
+            RefreshToken token = new RefreshToken(refreshToken, expiresAt, member);
+            refreshTokenRepository.save(token);
+        }
 
         setTokenCookies(response, refreshToken);
 
